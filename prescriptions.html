@@ -1,0 +1,16 @@
+{% extends 'base.html' %}{% from '_macros.html' import delete_btn with context %}
+{% block title %}Prescriptions{% endblock %}
+{% block content %}
+<div class="row g-3"><div class="col-lg-4"><div class="card"><div class="card-header">Add prescription</div><div class="card-body"><form method="post" class="row g-2"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ <div class="col-12"><label class="form-label">Customer *</label><select class="form-select" name="customer_id" required><option value="">Select…</option>
+  {% for c in customers %}<option value="{{ c.id }}" {{ 'selected' if preselect==c.id }}>{{ c.name }}</option>{% endfor %}</select></div>
+ <div class="col-12"><label class="form-label">Doctor *</label><input class="form-control" name="doctor_name" required></div>
+ <div class="col-12"><label class="form-label">Issued on</label><input class="form-control" type="date" name="issued_on" max="{{ today }}" value="{{ today }}"></div>
+ <div class="col-12"><label class="form-label">Details *</label><textarea class="form-control" rows="3" name="details" required></textarea></div>
+ <div class="col-12"><button class="btn btn-brand">Save</button></div></form></div></div></div>
+<div class="col-lg-8"><form class="input-group mb-3"><input class="form-control" name="q" value="{{ q }}" placeholder="Search customer, doctor, medicine"><button class="btn btn-brand"><i class="bi bi-search"></i></button></form>
+<div class="card"><div class="table-responsive"><table class="table mb-0"><thead><tr><th>Date</th><th>Customer</th><th>Doctor</th><th>Details</th><th></th></tr></thead><tbody>
+{% for p in rx %}<tr><td class="text-nowrap">{{ p.issued_on|dmy }}</td><td><a href="{{ url_for('customer_view', cid=p.customer_id) }}">{{ p.customer_name }}</a></td><td>{{ p.doctor_name }}</td><td>{{ p.details }}</td>
+ <td>{{ delete_btn(url_for('prescription_delete', pid=p.id), 'Delete this prescription?') }}</td></tr>
+{% else %}<tr><td colspan="5" class="text-center text-muted py-4">No prescriptions.</td></tr>{% endfor %}</tbody></table></div></div></div></div>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends 'base.html' %}{% from '_macros.html' import badge with context %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="row g-3 mb-3">
+ {% macro stat(icon,color,val,lbl,url) %}<div class="col-6 col-lg-3"><a href="{{ url }}" class="text-decoration-none text-reset"><div class="card stat h-100">
+  <div class="ico ico-{{ color }}"><i class="bi bi-{{ icon }}"></i></div><div><div class="val">{{ val }}</div><div class="lbl">{{ lbl }}</div></div></div></a></div>{% endmacro %}
+ {{ stat('capsule','green',stats.total_medicines,'Total medicines',url_for('medicines')) }}
+ {{ stat('boxes','blue','{:,}'.format(stats.total_units),'Units in stock',url_for('inventory')) }}
+ {{ stat('cash-stack','violet',stats.stock_value|inr,'Stock value',url_for('report_stock')) }}
+ {{ stat('truck','slate',stats.suppliers,'Suppliers',url_for('suppliers')) }}
+ {{ stat('graph-up-arrow','green',td_total|inr,'Today\'s sales (' ~ td_count ~ ' bills)',url_for('report_daily')) }}
+ {{ stat('calendar-month','blue',mo_total|inr,'This month (' ~ mo_count ~ ' bills)',url_for('report_monthly')) }}
+ {{ stat('exclamation-triangle','amber',stats.low + stats.out,'Low / out of stock',url_for('inventory', filter='low')) }}
+ {{ stat('hourglass-split','red',stats.expired ~ ' / ' ~ stats.expiring,'Expired / expiring ≤30d',url_for('expiry')) }}
+</div>
+<div class="row g-3 mb-3">
+ <div class="col-lg-7"><div class="card h-100"><div class="card-header">Sales – last 7 days</div><div class="card-body">
+  <div class="bars">{% for s in series %}<div class="b" title="{{ s.date }}: {{ s.total|inr }} ({{ s.count }} bills)">
+   <small class="mb-1">{{ s.total|round|int }}</small><span class="bar" style="height:{{ s.pct * 0.8 }}%"></span><div class="mt-1">{{ s.label }}</div></div>{% endfor %}</div>
+  <div class="text-muted small mt-2">All-time: {{ all_total|inr }} across {{ all_count }} bills (₹ per day shown above bars)</div></div></div></div>
+ <div class="col-lg-5"><div class="card h-100"><div class="card-header">Top sellers (30 days)</div>
+  <ul class="list-group list-group-flush">{% for t in top %}<li class="list-group-item d-flex justify-content-between"><span>{{ t.medicine_name }}</span><span class="text-muted">{{ t.units }} units · {{ t.revenue|inr }}</span></li>
+  {% else %}<li class="list-group-item text-muted">No sales yet.</li>{% endfor %}</ul></div></div>
+</div>
+<div class="row g-3">
+ <div class="col-lg-4"><div class="card h-100"><div class="card-header d-flex justify-content-between">Low stock <a class="small" href="{{ url_for('inventory', filter='low') }}">View all</a></div>
+  <ul class="list-group list-group-flush">{% for m in low_list %}<li class="list-group-item d-flex justify-content-between"><span>{{ m.name }}</span><span class="badge bg-{{ 'dark' if m.quantity<=0 else 'warning text-dark' }}">{{ m.quantity }} left</span></li>
+  {% else %}<li class="list-group-item text-muted">All stocked up.</li>{% endfor %}</ul></div></div>
+ <div class="col-lg-4"><div class="card h-100"><div class="card-header d-flex justify-content-between">Expiry watch <a class="small" href="{{ url_for('expiry') }}">View all</a></div>
+  <ul class="list-group list-group-flush">{% for m in exp_list %}<li class="list-group-item d-flex justify-content-between"><span>{{ m.name }}</span>
+   {{ badge(m.status) }}</li>{% else %}<li class="list-group-item text-muted">Nothing expiring.</li>{% endfor %}</ul></div></div>
+ <div class="col-lg-4"><div class="card h-100"><div class="card-header d-flex justify-content-between">Recent bills <a class="small" href="{{ url_for('sales') }}">View all</a></div>
+  <ul class="list-group list-group-flush">{% for s in recent %}<li class="list-group-item d-flex justify-content-between"><a href="{{ url_for('invoice', sid=s.id) }}">{{ s.invoice_no }}</a><span>{{ s.customer_name }} · <b>{{ s.total_amount|inr }}</b></span></li>
+  {% else %}<li class="list-group-item text-muted">No bills yet.</li>{% endfor %}</ul></div></div>
+</div>
+<div class="mt-3"><a href="{{ url_for('billing') }}" class="btn btn-brand"><i class="bi bi-receipt"></i> New bill</a>
+ <a href="{{ url_for('medicine_add') }}" class="btn btn-outline-brand"><i class="bi bi-plus-lg"></i> Add medicine</a></div>
+{% endblock %}

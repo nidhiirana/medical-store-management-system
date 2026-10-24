@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Sales History{% endblock %}
+{% block content %}
+<div class="card mb-3"><div class="card-body"><form class="row g-2 align-items-end">
+ <div class="col-12 col-md"><label class="form-label small mb-0">Invoice / customer</label><input class="form-control" name="q" value="{{ q }}"></div>
+ <div class="col-6 col-md-2"><label class="form-label small mb-0">From</label><input class="form-control" type="date" name="from" value="{{ d_from or '' }}"></div>
+ <div class="col-6 col-md-2"><label class="form-label small mb-0">To</label><input class="form-control" type="date" name="to" value="{{ d_to or '' }}"></div>
+ <div class="col-auto"><button class="btn btn-brand"><i class="bi bi-search"></i> Filter</button> <a class="btn btn-outline-secondary" href="{{ url_for('sales') }}">Reset</a></div>
+ <div class="col-auto ms-md-auto"><a class="btn btn-brand" href="{{ url_for('billing') }}"><i class="bi bi-plus-lg"></i> New bill</a></div></form></div></div>
+<div class="card"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Invoice</th><th>Date</th><th>Customer</th><th>Payment</th><th class="text-end">Subtotal</th><th class="text-end">Discount</th><th class="text-end">Total</th><th>Cashier</th><th></th></tr></thead><tbody>
+{% for s in sales %}<tr><td class="fw-semibold">{{ s.invoice_no }}</td><td class="text-nowrap">{{ s.sale_date|dtime }}</td><td>{{ s.customer_name }}</td><td>{{ s.payment_mode }}</td>
+ <td class="text-end">{{ s.subtotal|inr }}</td><td class="text-end">{{ s.discount_amt|inr }} <small class="text-muted">({{ s.discount_pct|round(2) }}%)</small></td><td class="text-end fw-semibold">{{ s.total_amount|inr }}</td><td>{{ s.cashier or '—' }}</td>
+ <td class="text-end"><a class="btn btn-sm btn-outline-brand" href="{{ url_for('invoice', sid=s.id) }}"><i class="bi bi-printer"></i> Invoice</a></td></tr>
+{% else %}<tr><td colspan="9" class="text-center text-muted py-4">No sales found.</td></tr>{% endfor %}</tbody></table></div>
+<div class="card-footer d-flex justify-content-between text-muted small"><span>{{ sales|length }} bill(s) (latest 300 shown)</span><b class="text-dark">Total: {{ total|inr }}</b></div></div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends 'base.html' %}{% from '_macros.html' import delete_btn with context %}
+{% block title %}Users{% endblock %}
+{% block content %}
+<div class="row g-3"><div class="col-lg-4"><div class="card"><div class="card-header">Add user</div><div class="card-body"><form method="post" class="row g-2"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ <div class="col-12"><input class="form-control" name="name" placeholder="Full name" required></div><div class="col-12"><input class="form-control" name="username" placeholder="Username" required></div>
+ <div class="col-12"><input class="form-control" type="password" name="password" placeholder="Password (min 8)" required autocomplete="new-password"></div>
+ <div class="col-12"><select class="form-select" name="role"><option value="pharmacist">Pharmacist</option><option value="admin">Admin</option></select></div>
+ <div class="col-12"><button class="btn btn-brand">Create user</button></div></form></div></div></div>
+<div class="col-lg-8"><div class="card"><div class="table-responsive"><table class="table mb-0"><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Created</th><th></th></tr></thead><tbody>
+{% for u in users %}<tr><td>{{ u.name }}</td><td>{{ u.username }}</td><td><span class="badge bg-{{ 'success' if u.role=='admin' else 'secondary' }}">{{ u.role }}</span></td><td>{{ u.created_at|dtime }}</td>
+ <td class="text-end">{% if u.id != current_user.id %}{{ delete_btn(url_for('user_delete', uid=u.id), 'Delete user ' ~ u.username ~ '?') }}{% endif %}</td></tr>{% endfor %}</tbody></table></div></div></div></div>
+{% endblock %}

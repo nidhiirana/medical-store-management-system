@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Invoice {{ sale.invoice_no }}{% endblock %}
+{% block content %}
+<div class="d-flex gap-2 mb-3 no-print"><button class="btn btn-brand" data-print><i class="bi bi-printer"></i> Print invoice</button>
+ <a class="btn btn-outline-brand" href="{{ url_for('billing') }}">New bill</a><a class="btn btn-outline-secondary" href="{{ url_for('sales') }}">Sales history</a></div>
+<div class="invoice">
+ <div class="d-flex justify-content-between flex-wrap gap-2 border-bottom pb-3 mb-3">
+  <div><h2 class="mb-0">{{ store.name }}</h2><div class="text-muted small">{{ store.tagline }}</div><div class="small mt-1">{{ store.address }}<br>{{ store.phone }} · {{ store.email }}</div></div>
+  <div class="text-md-end"><h4 class="mb-1">TAX INVOICE</h4><div><b>{{ sale.invoice_no }}</b></div><div class="small">{{ sale.sale_date|dtime }}</div><div class="small">Payment: {{ sale.payment_mode }}</div></div></div>
+ <div class="row mb-3"><div class="col-6"><div class="text-muted small">Billed to</div><b>{{ sale.customer_name }}</b>{% if cust %}<div class="small">{{ cust.contact or '' }}</div>{% endif %}</div>
+  <div class="col-6 text-end"><div class="text-muted small">Served by</div>{{ sale.cashier or '—' }}</div></div>
+ <div class="table-responsive"><table class="table table-sm"><thead><tr><th>#</th><th>Medicine</th><th>Batch</th><th class="text-end">Price</th><th class="text-end">Qty</th><th class="text-end">Amount</th></tr></thead><tbody>
+ {% for i in items %}<tr><td>{{ loop.index }}</td><td>{{ i.medicine_name }}</td><td>{{ i.batch_no }}</td><td class="text-end">{{ i.price|inr }}</td><td class="text-end">{{ i.quantity }}</td><td class="text-end">{{ i.subtotal|inr }}</td></tr>{% endfor %}</tbody></table></div>
+ <div class="row justify-content-end"><div class="col-md-5">
+  <div class="d-flex justify-content-between"><span>Subtotal ({{ units }} units)</span><span>{{ sale.subtotal|inr }}</span></div>
+  <div class="d-flex justify-content-between"><span>Discount ({{ sale.discount_pct|round(2) }}%)</span><span>− {{ sale.discount_amt|inr }}</span></div>
+  <div class="d-flex justify-content-between fs-5 fw-bold border-top mt-2 pt-2"><span>Total</span><span>{{ sale.total_amount|inr }}</span></div></div></div>
+ {% if rx %}<div class="small mt-3"><b>Prescription:</b> {{ rx.doctor_name }} – {{ rx.details }}</div>{% endif %}
+ <div class="text-center text-muted small border-top mt-4 pt-3">Thank you for choosing {{ store.name }}. Medicines once sold will not be taken back. Check expiry before use.</div>
+</div>
+{% endblock %}

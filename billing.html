@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}New Bill{% endblock %}
+{% block content %}
+<form method="post" id="billForm"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="items" id="itemsField">
+<div class="row g-3">
+ <div class="col-lg-7">
+  <div class="card mb-3"><div class="card-header">1. Customer</div><div class="card-body row g-2">
+   <div class="col-md-6"><select class="form-select" name="customer_id" id="custSel"><option value="">Walk-in customer</option><option value="new">+ New customer…</option>
+    {% for c in customers %}<option value="{{ c.id }}" {{ 'selected' if preselect==c.id }}>{{ c.name }}{% if c.contact %} ({{ c.contact }}){% endif %}</option>{% endfor %}</select></div>
+   <div class="col-md-3 newc d-none"><input class="form-control" name="new_name" placeholder="Name"></div>
+   <div class="col-md-3 newc d-none"><input class="form-control" name="new_contact" placeholder="Contact"></div>
+   <div class="col-12"><a class="small" data-bs-toggle="collapse" href="#rx">Add prescription details (optional, needs a customer)</a>
+    <div class="collapse mt-2" id="rx"><div class="row g-2"><div class="col-md-5"><input class="form-control" name="rx_doctor" placeholder="Doctor name"></div><div class="col-md-7"><input class="form-control" name="rx_details" placeholder="Prescription details"></div></div></div></div></div></div>
+  <div class="card"><div class="card-header">2. Add medicines</div><div class="card-body">
+   <input class="form-control mb-2" id="search" placeholder="Search medicine name, batch or category…" autocomplete="off">
+   <div class="list-group" id="results" style="max-height:340px;overflow:auto"></div></div></div>
+ </div>
+ <div class="col-lg-5"><div class="card"><div class="card-header">3. Bill</div><div class="table-responsive"><table class="table cart-table mb-0"><thead><tr><th>Item</th><th>Qty</th><th class="text-end">Amount</th><th></th></tr></thead><tbody id="cart"></tbody></table></div>
+  <div class="card-body border-top">
+   <div class="d-flex justify-content-between"><span>Subtotal</span><b id="sub">₹0.00</b></div>
+   <div class="d-flex justify-content-between align-items-center my-2"><span>Discount (%)</span><input class="form-control form-control-sm" style="width:90px" type="number" min="0" max="100" step="0.01" name="discount_pct" id="disc" value="0"></div>
+   <div class="d-flex justify-content-between text-muted"><span>Discount amount</span><span id="damt">₹0.00</span></div>
+   <div class="d-flex justify-content-between fs-5 mt-1"><span>Total</span><b id="tot">₹0.00</b></div>
+   <div class="my-3"><label class="form-label">Payment mode</label><select class="form-select" name="payment_mode">{% for p in payment_modes %}<option>{{ p }}</option>{% endfor %}</select></div>
+   <button class="btn btn-brand w-100 py-2" id="gen" disabled><i class="bi bi-receipt"></i> Generate bill</button>
+   <div class="form-text">Final prices and stock are re-checked on the server when the bill is saved.</div></div></div></div>
+</div></form>
+{% endblock %}
+{% block scripts %}
+<script>
+const CATALOG = {{ catalog|tojson }};
+const cart = {};  // id -> qty
+const inr = n => '₹' + n.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+const r2 = n => Math.round((n + Number.EPSILON) * 100) / 100;
+const byId = id => CATALOG.find(m => m.id === +id);
+const $ = id => document.getElementById(id);
+function esc(s){return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function renderResults(){
+  const q = $('search').value.trim().toLowerCase();
+  const list = CATALOG.filter(m => !q || (m.name+' '+m.batch+' '+m.category).toLowerCase().includes(q)).slice(0, 40);
+  $('results').innerHTML = list.map(m => {
+    const tag = m.status==='expired' ? '<span class="badge bg-danger">EXPIRED</span>' : m.stock<=0 ? '<span class="badge bg-dark">Out of stock</span>' :
+      m.status==='expiring' ? '<span class="badge bg-warning text-dark">Expiring</span>' : '';
+    return `<button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center ${m.sellable?'':'disabled'}" data-id="${m.id}" ${m.sellable?'':'disabled'}>
+      <span><b>${esc(m.name)}</b> <small class="text-muted">batch ${esc(m.batch)} · exp ${esc(m.expiry)}</small> ${tag}</span>
+      <span class="text-nowrap">${inr(m.price)} <small class="text-muted">· ${m.stock} in stock</small></span></button>`;
+  }).join('') || '<div class="text-muted p-2">No match.</div>';
+}
+function render(){
+  let sub = 0;
+  const rows = Object.entries(cart).map(([id, q]) => {
+    const m = byId(id), line = r2(m.price * q); sub = r2(sub + line);
+    return `<tr><td>${esc(m.name)}<div class="small text-muted">${inr(m.price)} · max ${m.stock}</div></td>
+      <td><input type="number" class="form-control form-control-sm" min="1" max="${m.stock}" value="${q}" data-qty="${id}"></td>
+      <td class="text-end">${inr(line)}</td><td><button type="button" class="btn btn-sm btn-outline-danger btn-icon" data-rm="${id}"><i class="bi bi-x-lg"></i></button></td></tr>`;
+  });
+  $('cart').innerHTML = rows.join('') || '<tr><td colspan="4" class="text-center text-muted py-3">No items yet.</td></tr>';
+  let d = parseFloat($('disc').value); if (isNaN(d) || d < 0) d = 0; if (d > 100) d = 100;
+  const da = r2(sub * d / 100);
+  $('sub').textContent = inr(sub); $('damt').textContent = '− ' + inr(da); $('tot').textContent = inr(r2(sub - da));
+  $('gen').disabled = !Object.keys(cart).length;
+}
+$('search').addEventListener('input', renderResults);
+$('results').addEventListener('click', e => {
+  const b = e.target.closest('[data-id]'); if (!b) return;
+  const m = byId(b.dataset.id); if (!m.sellable) return;
+  cart[m.id] = Math.min((cart[m.id] || 0) + 1, m.stock); render();
+});
+$('cart').addEventListener('change', e => {
+  const id = e.target.dataset.qty; if (!id) return;
+  let q = parseInt(e.target.value, 10); if (isNaN(q) || q < 1) return;
+  cart[id] = Math.min(q, byId(id).stock); render();
+});
+$('cart').addEventListener('click', e => { const b = e.target.closest('[data-rm]'); if (b){ delete cart[b.dataset.rm]; render(); } });
+$('disc').addEventListener('input', render);
+$('custSel').addEventListener('change', e => document.querySelectorAll('.newc').forEach(x => x.classList.toggle('d-none', e.target.value !== 'new')));
+$('billForm').addEventListener('submit', () => { $('itemsField').value = JSON.stringify(Object.entries(cart).map(([id, qty]) => ({id: +id, qty}))); });
+renderResults(); render();
+</script>
+{% endblock %}

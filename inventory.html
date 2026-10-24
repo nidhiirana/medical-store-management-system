@@ -1,0 +1,16 @@
+{% extends 'base.html' %}{% from '_macros.html' import badge with context %}
+{% block title %}Inventory{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+ <div class="btn-group">{% for k,l in [('all','All'),('low','Low stock'),('out','Out of stock')] %}
+  <a class="btn btn-{{ 'brand' if flt==k else 'outline-secondary' }}" href="{{ url_for('inventory', filter=k, q=q) }}">{{ l }} <span class="badge bg-light text-dark">{{ counts[k] }}</span></a>{% endfor %}</div>
+ <form class="ms-auto d-flex gap-2"><input type="hidden" name="filter" value="{{ flt }}"><input class="form-control" name="q" value="{{ q }}" placeholder="Search medicine / batch"><button class="btn btn-brand"><i class="bi bi-search"></i></button></form></div>
+<div class="card"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Medicine</th><th>Batch</th><th class="text-end">In stock</th><th class="text-end">Reorder at</th><th>Stock level</th><th>Status</th><th>Supplier</th><th style="min-width:190px">Restock</th></tr></thead><tbody>
+{% for m in meds %}<tr><td class="fw-semibold">{{ m.name }}</td><td>{{ m.batch_no }}</td><td class="text-end">{{ m.quantity }}</td><td class="text-end">{{ m.reorder_level }}</td>
+ <td><div class="bar-h"><i style="width:{{ [100, (m.quantity / ((m.reorder_level or 1) * 3) * 100)|round|int]|min }}%;background:{{ '#dc2626' if m.quantity<=0 else ('#f59e0b' if m.quantity<=m.reorder_level else '#059669') }}"></i></div></td>
+ <td>{{ badge(m.status) }}</td><td>{{ m.supplier_name or '—' }}</td>
+ <td><form method="post" action="{{ url_for('restock', mid=m.id) }}" class="d-flex gap-1"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="next" value="{{ request.full_path.rstrip('?') }}">
+  <input class="form-control form-control-sm" type="number" min="1" name="qty" placeholder="Qty" required><button class="btn btn-sm btn-brand">Add</button></form></td></tr>
+{% else %}<tr><td colspan="8" class="text-center text-muted py-4">Nothing to show.</td></tr>{% endfor %}</tbody></table></div>
+<div class="card-footer text-muted small">{{ meds|length }} item(s) · {{ total_units }} units</div></div>
+{% endblock %}

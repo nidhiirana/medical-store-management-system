@@ -1,0 +1,17 @@
+{% extends 'base.html' %}{% from '_macros.html' import badge with context %}
+{% block title %}Expiry Management{% endblock %}
+{% macro tbl(rows, expired) %}
+<div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Medicine</th><th>Batch</th><th class="text-end">Qty</th><th>Expiry date</th><th>{{ 'Expired' if expired else 'Days left' }}</th><th class="text-end">Value</th><th>Supplier</th><th></th></tr></thead><tbody>
+{% for m in rows %}<tr><td class="fw-semibold">{{ m.name }}</td><td>{{ m.batch_no }}</td><td class="text-end">{{ m.quantity }}</td><td>{{ m.expiry_date|dmy }}</td>
+ <td>{% if expired %}<span class="badge bg-danger">{{ -m.days_left }} day(s) ago</span>{% else %}<span class="badge bg-warning text-dark">{{ m.days_left }} day(s)</span>{% endif %}</td>
+ <td class="text-end">{{ (m.quantity*m.price)|inr }}</td><td>{{ m.supplier_name or '—' }}</td>
+ <td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{{ url_for('medicine_edit', mid=m.id) }}">Edit</a></td></tr>
+{% else %}<tr><td colspan="8" class="text-center text-muted py-4">None.</td></tr>{% endfor %}</tbody></table></div>
+{% endmacro %}
+{% block content %}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3"><span class="text-muted">Expiring within:</span>
+ <div class="btn-group">{% for d in (30,60,90) %}<a class="btn btn-{{ 'brand' if window==d else 'outline-secondary' }}" href="{{ url_for('expiry', days=d) }}">{{ d }} days</a>{% endfor %}</div></div>
+<div class="alert alert-danger d-flex justify-content-between"><span><i class="bi bi-x-octagon"></i> <b>{{ expired|length }}</b> expired batch(es) – blocked from sale. Remove from shelf.</span><span>Stock value at risk: <b>{{ loss|inr }}</b></span></div>
+<div class="card mb-3"><div class="card-header text-danger">Expired</div>{{ tbl(expired, true) }}</div>
+<div class="card"><div class="card-header text-warning-emphasis">Expiring within {{ window }} days</div>{{ tbl(soon, false) }}</div>
+{% endblock %}

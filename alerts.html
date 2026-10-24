@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Alerts{% endblock %}
+{% block content %}
+<div class="d-flex mb-3"><p class="text-muted mb-0 flex-grow-1">Alerts are generated automatically for low stock, out of stock, expiring and expired medicines, and clear themselves once fixed.</p>
+ {% if alerts %}<form method="post" action="{{ url_for('alerts_read_all') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-outline-brand btn-sm">Mark all as read</button></form>{% endif %}</div>
+{% set meta = {'expired':('danger','x-octagon','Expired'),'out_of_stock':('dark','box','Out of stock'),'expiring_soon':('warning','hourglass-split','Expiring soon'),'low_stock':('warning','exclamation-triangle','Low stock')} %}
+<div class="list-group">{% for a in alerts %}{% set m = meta[a.type] %}
+ <div class="list-group-item d-flex align-items-center gap-3 {{ 'opacity-50' if a.is_read }}">
+  <span class="badge bg-{{ m[0] }} {{ 'text-dark' if m[0]=='warning' }}"><i class="bi bi-{{ m[1] }}"></i> {{ m[2] }}</span>
+  <div class="flex-grow-1">{{ a.message }}<div class="small text-muted">{{ a.alert_date|dmy }}</div></div>
+  <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('inventory', q=a.medicine_name) }}">Inventory</a>
+  {% if not a.is_read %}<form method="post" action="{{ url_for('alert_read', aid=a.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-outline-brand">Mark read</button></form>{% endif %}</div>
+{% else %}<div class="list-group-item text-center text-muted py-4">No alerts. 🎉</div>{% endfor %}</div>
+{% endblock %}

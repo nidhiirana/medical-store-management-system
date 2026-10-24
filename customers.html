@@ -1,0 +1,13 @@
+{% extends 'base.html' %}{% from '_macros.html' import delete_btn with context %}
+{% block title %}Customers{% endblock %}
+{% block content %}
+<div class="card mb-3"><div class="card-body"><form class="row g-2"><div class="col"><input class="form-control" name="q" value="{{ q }}" placeholder="Search name or contact"></div>
+ <div class="col-auto"><button class="btn btn-brand"><i class="bi bi-search"></i></button></div>
+ <div class="col-auto"><a class="btn btn-brand" href="{{ url_for('customer_add') }}"><i class="bi bi-plus-lg"></i> Add customer</a></div></form></div></div>
+<div class="card"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Name</th><th>Contact</th><th>Address</th><th class="text-end">Purchases</th><th class="text-end">Spent</th><th class="text-end">Actions</th></tr></thead><tbody>
+{% for c in customers %}<tr><td class="fw-semibold"><a href="{{ url_for('customer_view', cid=c.id) }}">{{ c.name }}</a></td><td>{{ c.contact or '—' }}</td><td>{{ c.address or '—' }}</td><td class="text-end">{{ c.purchases }}</td><td class="text-end">{{ c.spent|inr }}</td>
+ <td class="text-end text-nowrap"><a class="btn btn-sm btn-outline-brand btn-icon" href="{{ url_for('billing', customer_id=c.id) }}" title="New bill"><i class="bi bi-receipt"></i></a>
+ <a class="btn btn-sm btn-outline-secondary btn-icon" href="{{ url_for('customer_edit', cid=c.id) }}" title="Edit"><i class="bi bi-pencil"></i></a>
+ {% if current_user.role=='admin' %}{{ delete_btn(url_for('customer_delete', cid=c.id), 'Delete customer ' ~ c.name ~ '? Their invoices are kept.') }}{% endif %}</td></tr>
+{% else %}<tr><td colspan="6" class="text-center text-muted py-4">No customers found.</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

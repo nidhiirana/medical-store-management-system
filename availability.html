@@ -1,0 +1,16 @@
+{% extends 'plain.html' %}{% from '_macros.html' import badge with context %}
+{% block title %}Medicine Availability{% endblock %}
+{% block body %}
+<div class="container py-4" style="max-width:820px">
+ <div class="d-flex align-items-center mb-3"><h1 class="h4 mb-0 flex-grow-1"><i class="bi bi-capsule-pill text-success"></i> {{ store.name }} – Medicine Availability</h1>
+  <a class="btn btn-outline-brand btn-sm" href="{{ url_for('login') }}">Staff login</a></div>
+ <form class="input-group mb-3"><input class="form-control" name="q" value="{{ q }}" placeholder="Search medicine or category, e.g. Paracetamol" autofocus>
+  <button class="btn btn-brand"><i class="bi bi-search"></i> Search</button></form>
+ {% if results is not none %}
+ <div class="card"><div class="table-responsive"><table class="table mb-0"><thead><tr><th>Medicine</th><th>Category</th><th class="text-end">Price</th><th>Availability</th></tr></thead><tbody>
+ {% for r in results %}<tr><td>{{ r.name }}</td><td>{{ r.category }}</td><td class="text-end">{{ r.price|inr }}</td>
+  <td>{% if r.available %}<span class="badge bg-success">In stock</span>{% elif r.status=='expired' %}<span class="badge bg-secondary">Not available</span>{% else %}<span class="badge bg-danger">Out of stock</span>{% endif %}</td></tr>
+ {% else %}<tr><td colspan="4" class="text-center text-muted py-4">No medicine found for “{{ q }}”.</td></tr>{% endfor %}</tbody></table></div></div>
+ {% else %}<p class="text-muted">Type a medicine name to check whether it is in stock. {{ store.address }} · {{ store.phone }}</p>{% endif %}
+</div>
+{% endblock %}

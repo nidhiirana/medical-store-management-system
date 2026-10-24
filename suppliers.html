@@ -1,0 +1,12 @@
+{% extends 'base.html' %}{% from '_macros.html' import delete_btn with context %}
+{% block title %}Suppliers{% endblock %}
+{% block content %}
+<div class="card mb-3"><div class="card-body"><form class="row g-2"><div class="col"><input class="form-control" name="q" value="{{ q }}" placeholder="Search name, contact, address"></div>
+ <div class="col-auto"><button class="btn btn-brand"><i class="bi bi-search"></i></button></div>
+ <div class="col-auto"><a class="btn btn-brand" href="{{ url_for('supplier_add') }}"><i class="bi bi-plus-lg"></i> Add supplier</a></div></form></div></div>
+<div class="card"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Supplier</th><th>Contact</th><th>Email</th><th>Address</th><th class="text-end">Medicines</th><th class="text-end">Actions</th></tr></thead><tbody>
+{% for s in suppliers %}<tr><td class="fw-semibold"><a href="{{ url_for('supplier_view', sid=s.id) }}">{{ s.name }}</a></td><td>{{ s.contact }}</td><td>{{ s.email or '—' }}</td><td>{{ s.address or '—' }}</td><td class="text-end">{{ s.med_count }}</td>
+ <td class="text-end text-nowrap"><a class="btn btn-sm btn-outline-secondary btn-icon" href="{{ url_for('supplier_edit', sid=s.id) }}" title="Edit"><i class="bi bi-pencil"></i></a>
+ {% if current_user.role=='admin' %}{{ delete_btn(url_for('supplier_delete', sid=s.id), 'Delete supplier ' ~ s.name ~ '? Their medicines are kept.') }}{% endif %}</td></tr>
+{% else %}<tr><td colspan="6" class="text-center text-muted py-4">No suppliers found.</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

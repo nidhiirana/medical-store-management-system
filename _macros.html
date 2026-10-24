@@ -1,0 +1,9 @@
+{% macro badge(status) -%}
+{%- set m = {'expired':('danger','Expired'),'expiring':('warning text-dark','Expiring soon'),'out':('dark','Out of stock'),'low':('warning text-dark','Low stock'),'ok':('success','OK')} -%}
+<span class="badge bg-{{ m[status][0] }}">{{ m[status][1] }}</span>
+{%- endmacro %}
+{% macro csrf() -%}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{%- endmacro %}
+{% macro delete_btn(url, msg, label='') -%}
+<form method="post" action="{{ url }}" class="d-inline" data-confirm="{{ msg }}">{{ csrf() }}
+<button class="btn btn-sm btn-outline-danger btn-icon" title="Delete"><i class="bi bi-trash"></i>{{ label }}</button></form>
+{%- endmacro %}

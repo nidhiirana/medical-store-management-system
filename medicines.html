@@ -1,0 +1,20 @@
+{% extends 'base.html' %}{% from '_macros.html' import badge, delete_btn with context %}
+{% block title %}Medicines{% endblock %}
+{% block content %}
+<div class="card mb-3"><div class="card-body">
+ <form class="row g-2"><div class="col-12 col-md"><input class="form-control" name="q" value="{{ q }}" placeholder="Search name, batch or category"></div>
+  <div class="col-6 col-md-3"><select class="form-select" name="category"><option value="">All categories</option>{% for c in cats %}<option {{ 'selected' if c==cat }}>{{ c }}</option>{% endfor %}</select></div>
+  <div class="col-6 col-md-3"><select class="form-select" name="status"><option value="">All status</option>
+   {% for k,v in [('ok','OK'),('low','Low stock'),('out','Out of stock'),('expiring','Expiring soon'),('expired','Expired')] %}<option value="{{ k }}" {{ 'selected' if k==status }}>{{ v }}</option>{% endfor %}</select></div>
+  <div class="col-auto"><button class="btn btn-brand"><i class="bi bi-search"></i> Search</button> <a class="btn btn-outline-secondary" href="{{ url_for('medicines') }}">Reset</a></div>
+  <div class="col-auto ms-md-auto"><a class="btn btn-brand" href="{{ url_for('medicine_add') }}"><i class="bi bi-plus-lg"></i> Add medicine</a></div></form></div></div>
+<div class="card"><div class="table-responsive"><table class="table table-hover mb-0">
+ <thead><tr><th>Medicine</th><th>Batch</th><th>Category</th><th class="text-end">Price</th><th class="text-end">Qty</th><th>Expiry</th><th>Status</th><th>Supplier</th><th class="text-end">Actions</th></tr></thead><tbody>
+ {% for m in meds %}<tr><td class="fw-semibold">{{ m.name }}</td><td>{{ m.batch_no }}</td><td>{{ m.category }}</td><td class="text-end">{{ m.price|inr }}</td><td class="text-end">{{ m.quantity }}</td>
+  <td>{{ m.expiry_date|dmy }}<div class="small text-muted">{% if m.days_left <= 0 %}expired {{ -m.days_left }}d ago{% else %}{{ m.days_left }}d left{% endif %}</div></td>
+  <td>{{ badge(m.status) }}</td><td>{{ m.supplier_name or '—' }}</td>
+  <td class="text-end text-nowrap"><a class="btn btn-sm btn-outline-secondary btn-icon" title="Edit" href="{{ url_for('medicine_edit', mid=m.id) }}"><i class="bi bi-pencil"></i></a>
+   {% if current_user.role=='admin' %}{{ delete_btn(url_for('medicine_delete', mid=m.id), 'Delete ' ~ m.name ~ ' (batch ' ~ m.batch_no ~ ')? Past invoices are kept.') }}{% endif %}</td></tr>
+ {% else %}<tr><td colspan="9" class="text-center text-muted py-4">No medicines found.</td></tr>{% endfor %}</tbody></table></div>
+ <div class="card-footer text-muted small">{{ meds|length }} record(s)</div></div>
+{% endblock %}

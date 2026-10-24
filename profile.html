@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}My Profile{% endblock %}
+{% block content %}
+<div class="card" style="max-width:600px"><div class="card-body"><form method="post" class="row g-3"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ <div class="col-md-6"><label class="form-label">Username</label><input class="form-control" value="{{ current_user.username }}" disabled></div>
+ <div class="col-md-6"><label class="form-label">Role</label><input class="form-control" value="{{ current_user.role|capitalize }}" disabled></div>
+ <div class="col-12"><label class="form-label">Display name</label><input class="form-control" name="name" value="{{ current_user.name }}" required></div>
+ <div class="col-12"><hr class="my-1"><div class="text-muted small">Change password (leave blank to keep current)</div></div>
+ <div class="col-12"><input class="form-control" type="password" name="current_password" placeholder="Current password" autocomplete="current-password"></div>
+ <div class="col-md-6"><input class="form-control" type="password" name="new_password" placeholder="New password (min 8)" autocomplete="new-password"></div>
+ <div class="col-md-6"><input class="form-control" type="password" name="confirm_password" placeholder="Confirm new password" autocomplete="new-password"></div>
+ <div class="col-12"><button class="btn btn-brand">Save changes</button></div></form></div></div>
+{% endblock %}

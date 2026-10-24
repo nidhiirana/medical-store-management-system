@@ -1,0 +1,4 @@
+<ul class="nav nav-pills mb-3 no-print">
+ <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint=='report_daily' }}" href="{{ url_for('report_daily') }}">Daily sales</a></li>
+ <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint=='report_monthly' }}" href="{{ url_for('report_monthly') }}">Monthly sales</a></li>
+ <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint=='report_stock' }}" href="{{ url_for('report_stock') }}">Stock report</a></li></ul>

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{% endblock %} · {{ store.name }}</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+{% set ep = request.endpoint or '' %}
+{% macro nav(endpoint, icon, label, match=None) -%}
+<a class="nav-link {{ 'active' if ep.startswith(match or endpoint) }}" href="{{ url_for(endpoint) }}"><i class="bi bi-{{ icon }}"></i>{{ label }}
+{%- if endpoint == 'alerts' and unread_alerts %}<span class="badge bg-danger ms-auto">{{ unread_alerts }}</span>{% endif %}</a>
+{%- endmacro %}
+<div class="backdrop" id="backdrop"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="brand"><i class="bi bi-capsule-pill"></i> {{ store.name }}<small>{{ store.tagline }}</small></div>
+  <nav class="nav flex-column pb-3">
+    {{ nav('dashboard','speedometer2','Dashboard') }}
+    <div class="nav-section">Stock</div>
+    {{ nav('medicines','capsule','Medicines','medicine') }}
+    {{ nav('inventory','box-seam','Inventory','inventory') }}
+    {{ nav('expiry','hourglass-split','Expiry Management') }}
+    {{ nav('alerts','bell','Alerts') }}
+    {{ nav('suppliers','truck','Suppliers','supplier') }}
+    <div class="nav-section">Sales</div>
+    {{ nav('billing','receipt','New Bill') }}
+    {{ nav('sales','journal-text','Sales History','sales') }}
+    {{ nav('customers','people','Customers','customer') }}
+    {{ nav('prescriptions','file-medical','Prescriptions') }}
+    <div class="nav-section">Reports</div>
+    {{ nav('report_daily','calendar-day','Daily Sales') }}
+    {{ nav('report_monthly','calendar-month','Monthly Sales') }}
+    {{ nav('report_stock','clipboard-data','Stock Report') }}
+    <div class="nav-section">Account</div>
+    {{ nav('profile','person-circle','My Profile') }}
+    {% if current_user.role == 'admin' %}{{ nav('users','shield-lock','Users') }}{% endif %}
+    <a class="nav-link" href="{{ url_for('availability') }}"><i class="bi bi-search"></i>Availability Search</a>
+  </nav>
+</aside>
+<div class="content">
+  <header class="topbar d-flex align-items-center gap-2 no-print">
+    <button class="btn btn-outline-secondary d-lg-none" id="menuToggle" aria-label="Menu"><i class="bi bi-list"></i></button>
+    <h1 class="page-title flex-grow-1">{% block heading %}{{ self.title() }}{% endblock %}</h1>
+    <a href="{{ url_for('alerts') }}" class="btn btn-light position-relative" title="Alerts"><i class="bi bi-bell"></i>
+      {% if unread_alerts %}<span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle">{{ unread_alerts }}</span>{% endif %}</a>
+    <span class="text-muted small d-none d-md-inline">{{ current_user.name }} · {{ current_user.role|capitalize }}</span>
+    <form method="post" action="{{ url_for('logout') }}" class="d-inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-box-arrow-right"></i> Logout</button></form>
+  </header>
+  <main class="page">
+    {% with msgs = get_flashed_messages(with_categories=true) %}{% for cat, m in msgs %}
+    <div class="alert alert-{{ cat if cat in ('success','danger','warning','info') else 'info' }} alert-dismissible fade show" role="alert">{{ m }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    {% endfor %}{% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
